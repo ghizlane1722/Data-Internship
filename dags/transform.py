@@ -1,9 +1,9 @@
-## tasks/transform_task.py
+# tasks/transform_task.py
 import os
 import json
 from airflow.decorators import task
 from datetime import datetime
-import html
+from bs4 import BeautifulSoup
 
 @task()
 def transform(extracted_dir, transformed_dir):
@@ -14,7 +14,12 @@ def transform(extracted_dir, transformed_dir):
         if filename.endswith(".txt"):
             filepath = os.path.join(extracted_dir, filename)
             with open(filepath, 'r') as file:
-                extracted_data = json.load(file)
+                contenu = file.read()
+                # Vérifier si le contenu est vide
+                if not contenu.strip() or contenu.strip() == "nan":
+                print(f"Le fichier {fichier_extrait} est vide. Ignoré.")
+                continue
+                extracted_data = json.load(contenu)
 
             cleaned_description = clean_description(extracted_data.get("description", ""))
             transformed_data = {
@@ -63,5 +68,9 @@ def transform(extracted_dir, transformed_dir):
 
 def clean_description(description):
     """Clean job description."""
-    cleaned_description = html.unescape(description)
-    return cleaned_description
+    soup = BeautifulSoup(description_html, 'html.parser')
+        return soup.get_text()
+    return soup.get_text()
+
+
+
